@@ -119,7 +119,7 @@ void Clustering::readMatrix() {
     return;
 }
 
-void Clustering::readFromFile(char* inputfile) {    
+void Clustering::readFromFile(char* inputfile) {
     char first_item_name[200];
     char first_item_value[200];
     char temp[200];
@@ -220,31 +220,31 @@ void Clustering::kmedoidspp() {
             cluster_table.insert(i, &item_table.items[o]);
         }
 
-    }    
+    }
 }
 
 void Clustering::parkjun() {
     double pj[item_counter][item_counter];
     double sumpj[item_counter];
     double v[item_counter];
-    Item* items[item_counter];
-    
-    for (int i=0;i<item_counter;i++) {
+    Item * items[item_counter];
+
+    for (int i = 0; i < item_counter; i++) {
         sumpj[i] = 0;
-        for (int j=0;j<item_counter;j++) {
+        for (int j = 0; j < item_counter; j++) {
             pj[i][j] = item_table.items[i].distance(&item_table.items[j]);
             sumpj[i] += pj[i][j];
         }
         items[i] = &item_table.items[i];
     }
-    
-    for (int i=0;i<item_counter;i++) {
+
+    for (int i = 0; i < item_counter; i++) {
         v[i] = 0;
-        for (int j=0;j<item_counter;j++) {
-            v[i] += pj[i][j]/sumpj[j];
+        for (int j = 0; j < item_counter; j++) {
+            v[i] += pj[i][j] / sumpj[j];
         }
     }
-    
+
     double temp;
     Item* tempItem;
     for (int u = 0; u < item_counter; u++) {
@@ -253,53 +253,120 @@ void Clustering::parkjun() {
                 temp = v[j - 1];
                 v[j - 1] = v[j];
                 v[j] = temp;
-                
+
                 tempItem = items[j - 1];
                 items[j - 1] = items[j];
                 items[j] = tempItem;
             }
         }
     }
-    
-    for (int i=0;i<c;i++) {
+
+    for (int i = 0; i < c; i++) {
         cluster_table.insert(i, items[i]);
     }
 }
 
-
 void Clustering::pam() {
     double d;
     int pos;
-    
-    for (int n = 0; n < item_counter; n++) {
-        d = item_table.items[n].distance(cluster_table.lists[0].head->item);
-        pos = 0;
 
-        for (int j = 1; j < c; j++) {
-            double t = fmin(d, item_table.items[n].distance(cluster_table.lists[j].head->item));
-            if (d != t) {
-                pos = j;
-                d = t;
-            }
-        }
+    for (int n = 0; n < item_counter; n++) {
+        if (item_table.items[n].assigned == false) {
+            d = item_table.items[n].distance(cluster_table.lists[0].head->item);
+            pos = 0;
         
-        if (item_table.items[n] != cluster_table.lists[pos]->head) {
-            cluster_table.lists[pos].insert(item_table.items[n]);
+            for (int j = 1; j < c; j++) {
+                double t = fmin(d, item_table.items[n].distance(cluster_table.lists[j].head->item));
+                if (d != t) {
+                    pos = j;
+                    d = t;
+                }
+            }
+
+            if (&item_table.items[n] != cluster_table.lists[pos].head->item) {
+                cluster_table.lists[pos].insert(&item_table.items[n]);
+            }
+
+            item_table.items[n].assigned = true;
         }
     }
 }
 
-void Clustering::lsh() {    
+void Clustering::lsh() {
     Lsh lsh;
- 
+
     lsh.solve(k, L, d, &item_table, &cluster_table, metric_space, metric_space_value);
+    pam();
 }
+
+void Clustering::lloyd() {
+    HashTable* tempClusterTable = new HashTable();
+    tempClusterTable->create(cluster_table->size);
+    ListNode* tempNode;
+    
+    
+    for (int i=0;i<cluster_table->size;i++)  {
+        tempClusterTable->lists[i].insert(medoid);  // ######
+    }
+}
+
+void Clustering::resetFlags() {
+    for (int i = 0; i < item_counter; i++) {
+        item_table.items[i].assigned = false;
+    }
+}
+
+double Clustering::sumJ(HashTable* tempClusterTable) {
+    double result = 0;
+    Item* centroid;
+    ListNode* tempNode;
+    
+    for (int i=0;i<tempClusterTable->size;i++)  {
+        centroid = tempClusterTable->lists[i].head->item;
+        tempNode = tempClusterTable->lists[i].head->next;
+        
+        while(tempNode != NULL) {
+            result += centroid->distance(tempNode->item);
+            tempNode = tempNode->next;
+        }
+    }
+        
+    return result;    
+}
+
+
 
 void Clustering::solve() {
+    // init:    
     //kmedoidspp();
     parkjun();
-    
-    for (int t = 0; t < c; t++) {
-        printf("%s %d \n", cluster_table.lists[t].head->item->name, cluster_table.lists[t].size);
+
+    //    while (1) {
+    //        // assigned
+    resetFlags();
+    //pam();
+    lsh();
+
+    // update
+    //    }
+    //    
+
+    int counter = 0;
+    for (int t = 0, k; t < c; t++) {
+        printf("\n---------------------------------------------------------- \n");
+        printf("   Cluster #%d: %s %d \n", t, cluster_table.lists[t].head->item->name, cluster_table.lists[t].size);
+        printf("---------------------------------------------------------- \n");
+
+        ListNode* temp = cluster_table.lists[t].head;
+        k = 0;
+        while (temp) {
+            printf("%10s \t", temp->item->name);
+            if (k > 0 && k % 5 == 0) {
+                printf("\n");
+            }
+            counter++;
+            temp = temp->next;
+        }
     }
+    cout << "\n\n\nTotal items: " << counter << endl;
 }
