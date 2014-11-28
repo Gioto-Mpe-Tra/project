@@ -1,0 +1,42 @@
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+
+#include "Item.h"
+#include "Lsh.h"
+
+using namespace std;
+
+int main1(int argc, char** argv) {
+    Lsh lsh;
+
+    if (argc != 11) {
+        cout << " Syntax error: dwse swsta tis times se parakalw \n" << endl;
+    } else {
+        for (int i = 1; i < argc; i=i+2) {
+            if ((strcmp(argv[i], "-d") != 0) && (strcmp(argv[i], "-q") != 0) && (strcmp(argv[i], "-k") != 0) &&
+                    (strcmp(argv[i], "-L") != 0) && (strcmp(argv[i], "-o") != 0)) {
+                cout << "Syntax error \n" << endl;
+                return -1;
+            }
+        }
+        
+        for (int i = 1; i < argc; i = i + 2) {
+            if (strcmp(argv[i], "-d") == 0)
+                strcpy(lsh.inputfile, argv[i + 1]);
+            if (strcmp(argv[i], "-q") == 0)
+                strcpy(lsh.queryfile, argv[i + 1]);
+            if (strcmp(argv[i], "-k") == 0)
+                lsh.k = atoi(argv[i + 1]);
+            if (strcmp(argv[i], "-L") == 0)
+                lsh.L = atoi(argv[i + 1]);
+            if (strcmp(argv[i], "-o") == 0)
+                strcpy(lsh.outputfile, argv[i + 1]);
+        }
+
+        lsh.solve();
+       
+    }
+    
+    return 0;
+}
