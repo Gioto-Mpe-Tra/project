@@ -1,0 +1,16 @@
+#ifndef MYHEADER_H
+#define	MYHEADER_H
+
+#define EUCLIDEAN_SPACE 0
+#define HAMMING_SPACE 1
+#define MATRIX_SPACE 2
+
+#define METRIC_EUCLIDEAN 0
+#define METRIC_MANHATTAN 1
+#define METRIC_COSINE 2
+
+
+
+
+#endif	/* MYHEADER_H */
+
